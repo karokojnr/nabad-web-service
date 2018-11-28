@@ -1,0 +1,14 @@
+{
+  "name": "nadab-api",
+  "version": "1.0.0",
+  "description": "Nadab android app backend-api",
+  "main": "nadab.js",
+  "repository": "git@github.com:nyugoh/nadab-api",
+  "author": "Joe N Ngig",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "supervisor nadab.js",
+    "test": "jest"
+  }
+}

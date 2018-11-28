@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>API End-points</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <br>
+        <div class="row border-bottom">
+            <h1 class="">Nadab API</h1>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-head bg-light">
+                        <th>Route</th>
+                        <th>Method</th>
+                        <th>Params</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/</code></td>
+                            <td>GET</td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr>
+                            <td><code>/hotels/register</code></td>
+                            <td>POST</td>
+                            <td><pre>
+                            {
+                                "name": 'name',
+                                "email": 'hotel@email.com'    
+                            }</pre></td>
+                        </tr>
+                        <tr>
+                            <td><code>/products/list</code></td>
+                            <td>GET</td>
+                            <td><pre>
+                            </pre></td>
+                        </tr>
+                        <tr>
+                            <td><code>/products/add</code></td>
+                            <td>POST</td>
+                            <td><pre>
+                            {
+                                "name": 'name',
+                                "email": 'hotel@email.com'    
+                            }</pre></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="./js/jquery-3.3.1.slim.min.js"></script>
+    <script src="./js/popper.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+</body>
+</html>
