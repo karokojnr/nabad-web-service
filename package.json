@@ -10,5 +10,21 @@
   "scripts": {
     "start": "supervisor nadab.js",
     "test": "jest"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0"
+  },
+  "dependencies": {
+    "bcrypt": "^3.0.2",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.3",
+    "dotenv": "^6.1.0",
+    "express": "^4.16.4",
+    "express-session": "^1.15.6",
+    "jsonwebtoken": "^8.4.0",
+    "mongodb": "^3.1.10",
+    "mongoose": "^5.3.14",
+    "morgan": "^1.9.1",
+    "nodemailer": "^4.7.0"
   }
 }

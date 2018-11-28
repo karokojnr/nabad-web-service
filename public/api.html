@@ -17,41 +17,87 @@
         <br>
         <div class="row">
             <div class="col-12">
-                <table class="table table-bordered table-hover">
+                <table class="table table-bordered table-hover table-responsive-lg"">
                     <thead class="table-head bg-light">
                         <th>Route</th>
                         <th>Method</th>
                         <th>Params</th>
+                        <th>Response</th>
                     </thead>
                     <tbody>
                         <tr>
                             <td><code>/</code></td>
                             <td>GET</td>
                             <td>N/A</td>
+                            <td>This page</td>
                         </tr>
+                      <tr>
+                        <td><code>/login</code></td>
+                        <td>POST</td>
+                        <td><pre><code>
+                            {
+                                "email": 'placepoa@gmail.com',
+                                "password": 'a very strong password'
+                            }</code></pre></td>
+                        <td><pre><code>
+                          {
+                          success: true,
+                          token: 'token'
+                          }
+                        </code></pre></td>
+                      </tr>
+                      <tr>
+                        <td><code>/register</code></td>
+                        <td>POST</td>
+                        <td><pre><code>
+                            {
+                                "businessName": 'Place Poa Hotel',
+                                "applicantName": 'Jane Doe',
+                                "businessEmail": 'placepoa@gmail.com',
+                                "mobileNumber": '0712345678',
+                                "payBillNo": '123456',
+                                "address": '64',
+                                "city": 'Voi',
+                                "password": 'password',
+                                "paymentStatus": 'UNPAID'
+                            }</code></pre></td>
+                        <td><pre><code>
+                          {
+                          success: true,
+                          token: 'token'
+                          }
+                        </code></pre></td>
+                      </tr>
                         <tr>
                             <td><code>/hotels/register</code></td>
                             <td>POST</td>
-                            <td><pre>
+                            <td><pre><code>
                             {
                                 "name": 'name',
-                                "email": 'hotel@email.com'    
-                            }</pre></td>
+                                "email": 'hotel@email.com'
+                            }</code></pre></td>
+                          <td></td>
                         </tr>
                         <tr>
                             <td><code>/products/list</code></td>
                             <td>GET</td>
                             <td><pre>
                             </pre></td>
+                          <td></td>
                         </tr>
                         <tr>
                             <td><code>/products/add</code></td>
                             <td>POST</td>
-                            <td><pre>
+                            <td><pre><code>
                             {
                                 "name": 'name',
-                                "email": 'hotel@email.com'    
-                            }</pre></td>
+                                "email": 'hotel@email.com'
+                            }</code></pre></td>
+                          <td>
+                            <pre><code>{
+                              success: true,
+                              product: {object}
+                </code></pre>}</td>
                         </tr>
                     </tbody>
                 </table>
