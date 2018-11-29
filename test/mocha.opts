@@ -1,0 +1,5 @@
+--recursive
+--reporter dot
+--growl
+--ui bdd
+--exit

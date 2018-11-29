@@ -3,6 +3,14 @@ const Hotel = require('../models/Hotel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+router.get('/hotels', (req, res) => {
+  Hotel.find({}).then((h) => {
+    res.json({ success: true, hotels: h });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 router.post('/register', (req, res) => {
     if (req.body === undefined) {
       throw new Error('A request body is required');

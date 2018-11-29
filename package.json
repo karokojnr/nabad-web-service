@@ -9,10 +9,17 @@
   "private": true,
   "scripts": {
     "start": "supervisor nadab.js",
-    "test": "jest"
+    "test": "NODE_ENV=test mocha -t 5000 --reporter dot --growl --exit"
   },
   "devDependencies": {
-    "eslint": "^5.9.0"
+    "chai": "^4.2.0",
+    "chai-http": "^4.2.0",
+    "eslint": "^5.9.0",
+    "jest": "^23.6.0",
+    "mocha": "^5.2.0",
+    "sinon": "^7.1.1",
+    "sinon-mongoose": "^2.2.1",
+    "supervisor": "^0.12.0"
   },
   "dependencies": {
     "bcrypt": "^3.0.2",
