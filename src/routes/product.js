@@ -28,6 +28,15 @@ router.get('/', (req, res) => {
   });
 });
 
+// Get specific item
+router.get('/:id', (req, res) => {
+  Product.findById(req.params.id).then((product) => {
+    res.json({ success: true, product });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 router.post('/add', (req, res) => {
     if (Object.keys(req.body).length === 0) {
         res.status(404).json({ success: false, message: 'A request body is required' });
@@ -40,6 +49,37 @@ router.post('/add', (req, res) => {
     });
 });
 
+router.put('/activate/:id', (req, res) => {
+  Product.findById(req.params.id).then((product) => {
+    // Negate the current status
+    product.sellingStatus = !product.sellingStatus;
+    return product.save();
+  }).then((product) => {
+    res.json({ success: true, product });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+router.put('/edit/:id', (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      res.status(404).json({ success: false, message: 'A request body is required' });
+  }
+  Product.findByIdAndUpdate(req.params.id, req.body, { new: true }).then((product) => {
+    res.json({ success: true, product });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+router.delete('/delete/:id', (req, res) => {
+  Product.findByIdAndDelete(req.params.id).then((product) => {
+    // Return null product
+    res.json({ success: true, product });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
 
 module.exports = (app) => {
     app.use('/products', router);
