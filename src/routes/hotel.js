@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Hotel = require('../models/Hotel');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -39,16 +40,32 @@ router.post('/login', (req, res) => {
   Hotel.findOne({ businessEmail: req.body.email }).then((h) => {
     hotel = h;
     if (hotel) return bcrypt.compare(req.body.password, hotel.password);
-    else throw new Error('Business email doesn\'t exist');
+    else return User.findOne({ email: req.body.email });
   }).then((status) => {
-    if (status) {
-      let token = jwt.sign({
-        email: hotel.businessEmail,
-        id: hotel._id
-      }, process.env.SESSIONKEY);
-      res.json({ success: true, token });
+    if (typeof status === 'boolean') {
+      if (status) {
+        let token = jwt.sign({
+          email: hotel.businessEmail,
+          id: hotel._id
+        }, process.env.SESSIONKEY);
+        return res.json({ success: true, token });
+      } else {
+        throw new Error('Invalid email/password');
+      }
     } else {
-      throw new Error('Invalid email/password');
+      let user = status;
+      if (user === null) throw new Error('User doesn\'t exist');
+      else return bcrypt.compare(req.body.password, user.password).then((isMatch) => {
+        if (isMatch) {
+          let token = jwt.sign({
+            email: user.email,
+            id: user._id
+          }, process.env.SESSIONKEY);
+          res.json({ success: true, token });
+        } else {
+          throw new Error('Invalid email/password');
+        }
+      });
     }
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
