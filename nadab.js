@@ -26,6 +26,6 @@ const app = require('./config/express')();
 module.exports = app;
 
 app.listen(config.port, () => {
-  if (process.env.NODE_ENV === 'developement')
+  if (process.env.NODE_ENV === 'development')
     console.log('Nadab server listening on port ::' + config.port);
 });

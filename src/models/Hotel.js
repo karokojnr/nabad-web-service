@@ -8,7 +8,8 @@ const HotelSchema = new Schema({
   },
   businessEmail: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   mobileNumber: {
     type: Number,
@@ -16,7 +17,8 @@ const HotelSchema = new Schema({
   },
   businessName: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   payBillNo: {
     type: String,
