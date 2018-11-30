@@ -5,12 +5,23 @@ const jwt = require('jsonwebtoken');
 // Products list
 router.get('/', (req, res) => {
   // Pull hotel token and use it to filter hotels
-  if(req.headers['access-token'] || req.query['token']){
-    let token = req.headers['access-token'];
-    // req.query['token']
-    let decode = jwt.decode()
+  let hotel = {}
+
+  if (req.headers['x-token'] || req.query['token']) {
+    let token = "";
+    if (req.headers['x-token'] !== undefined) token = req.headers['x-token'];
+    if (req.query['token'] !== undefined) token = req.query['token'];
+    jwt.verify(token, process.env.SESSIONKEY, function(error, decode) {
+      if (error) {
+        throw new Error(error.message);
+      } else {
+        hotel = decode;
+      }
+    });
   }
-  Product.find({}).then((h) => {
+
+  let params = hotel.id ? { hotel: hotel.id } : {};
+  Product.find(params).then((h) => {
     res.json({ success: true, products: h });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });

@@ -22,6 +22,10 @@ const ProductSchema = new Schema({
     type: String,
     default: 'food.png'
   },
+  sellingStatus: {
+    type: Boolean,
+    default: true
+  },
   servedWith: {
     type: Array,
     default: []
