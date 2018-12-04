@@ -48,7 +48,7 @@ router.post('/login', (req, res) => {
           email: hotel.businessEmail,
           id: hotel._id
         }, process.env.SESSIONKEY);
-        return res.json({ success: true, token });
+        return res.json({ success: true, Token: token, email: 'test@gmail.com', password: 'passworddd' });
       } else {
         throw new Error('Invalid email/password');
       }
