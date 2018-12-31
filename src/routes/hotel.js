@@ -12,26 +12,38 @@ router.get('/hotels', (req, res) => {
   });
 });
 
+router.get('/search', (req, res) => {
+  let queryString = req.query;
+  let name = queryString.name;
+  // let hotel = queryString.hotel;
+  name = name.toLowerCase();
+  Hotel.find({ businessName: name }).then((h) => {
+    res.json({ success: true, hotels: h });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 router.post('/register', (req, res) => {
-    if (req.body === undefined) {
-      throw new Error('A request body is required');
-    }
-    let hotel = new Hotel(req.body);
-    bcrypt.hash(hotel.password, 10).then((hash) => {
-      hotel.password = hash;
-      return hotel.save();
-    }).then((hotel) => {
-      // TODO:: Send verification email ~ via a message broker
-      res.json({ success: true, hotel: hotel });
-    }).catch((e) => {
-      res.status(404).json({ success: false, message: e.message });
-    });
+  if (req.body === undefined) {
+    throw new Error('A request body is required');
+  }
+  let hotel = new Hotel(req.body);
+  bcrypt.hash(hotel.password, 10).then((hash) => {
+    hotel.password = hash;
+    return hotel.save();
+  }).then((hotel) => {
+    // TODO:: Send verification email ~ via a message broker
+    res.json({ success: true, hotel: hotel });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
 });
 
 router.post('/login', (req, res) => {
   try {
     if (req.body.email === undefined || req.body.password === undefined) {
-      throw new Error('A email & password are required');
+      throw new Error('Email and password are required');
     }
   } catch (e) {
     return res.status(404).json({ success: false, message: e.message });
@@ -48,7 +60,7 @@ router.post('/login', (req, res) => {
           email: hotel.businessEmail,
           id: hotel._id
         }, process.env.SESSIONKEY);
-        return res.json({ success: true, Token: token, email: 'test@gmail.com', password: 'passworddd' });
+        return res.json({ success: true, token: { token, hotelId: hotel._id } });
       } else {
         throw new Error('Invalid email/password');
       }
@@ -61,7 +73,7 @@ router.post('/login', (req, res) => {
             email: user.email,
             id: user._id
           }, process.env.SESSIONKEY);
-          res.json({ success: true, token });
+          res.json({ success: true, token: { token , hotelId: hotel._id } });
         } else {
           throw new Error('Invalid email/password');
         }

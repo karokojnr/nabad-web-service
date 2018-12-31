@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Product = require('../models/Product');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 // Products list
 router.get('/', (req, res) => {
@@ -20,8 +21,11 @@ router.get('/', (req, res) => {
     });
   }
 
-  let params = hotel.id ? { hotel: hotel.id } : {};
-  Product.find(params).then((h) => {
+  let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
+  Product
+    .find(params)
+    .populate('hotel', 'businessName')
+    .then((h) => {
     res.json({ success: true, products: h });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
@@ -40,13 +44,15 @@ router.get('/:id', (req, res) => {
 router.post('/add', (req, res) => {
     if (Object.keys(req.body).length === 0) {
         res.status(404).json({ success: false, message: 'A request body is required' });
+    } else {
+      let product = new Product(req.body);
+      product.save().then((product) => {
+        res.json({ success: true, product });
+      }).catch((e) => {
+        console.log(e.message);
+        res.status(400).json({ success: false, message: e.message });
+      });
     }
-    let product = new Product(req.body);
-    product.save().then((product) => {
-      res.json({ success: true, product });
-    }).catch((e) => {
-      res.status(404).json({ success: false, message: e.message });
-    });
 });
 
 router.put('/activate/:id', (req, res) => {
@@ -63,7 +69,7 @@ router.put('/activate/:id', (req, res) => {
 
 router.put('/edit/:id', (req, res) => {
   if (Object.keys(req.body).length === 0) {
-      res.status(404).json({ success: false, message: 'A request body is required' });
+      return res.status(404).json({ success: false, message: 'A request body is required' });
   }
   Product.findByIdAndUpdate(req.params.id, req.body, { new: true }).then((product) => {
     res.json({ success: true, product });

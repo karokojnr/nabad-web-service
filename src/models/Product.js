@@ -15,8 +15,8 @@ const ProductSchema = new Schema({
     required: true
   },
   hotel: {
-    type: String,
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hotel'
   },
   image: {
     type: String,
