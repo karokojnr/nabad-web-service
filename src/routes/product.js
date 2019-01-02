@@ -2,6 +2,22 @@ const router = require('express').Router();
 const Product = require('../models/Product');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
+const im = require('imagemagick');
+
+const storage = multer.diskStorage({
+  destination: 'public/images/uploads',
+  filename: function (req, file, cb) {
+    crypto.pseudoRandomBytes(16, function (err, raw) {
+      if (err) return cb(err)
+
+      cb(null, raw.toString('hex') + path.extname(file.originalname))
+    })
+  }
+});
+const upload = multer({ storage: storage })
 
 // Products list
 router.get('/', (req, res) => {
@@ -24,7 +40,7 @@ router.get('/', (req, res) => {
   let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
   Product
     .find(params)
-    .populate('hotel', 'businessName')
+    // .populate('hotel', 'businessName')
     .then((h) => {
     res.json({ success: true, products: h });
   }).catch((e) => {
@@ -41,12 +57,23 @@ router.get('/:id', (req, res) => {
   });
 });
 
-router.post('/add', (req, res) => {
+router.post('/add', upload.single('image'), (req, res) => {
     if (Object.keys(req.body).length === 0) {
         res.status(404).json({ success: false, message: 'A request body is required' });
     } else {
       let product = new Product(req.body);
+      product.image = `${req.file.filename}`;
       product.save().then((product) => {
+        im.resize({
+          srcPath: `public/images/uploads/${req.file.filename}`,
+          dstPath: `public/images/uploads/thumbs/${req.file.filename}`,
+          width: 300,
+          height:300
+        }, function(error, stdin, stdout) {
+          if (error)
+            console.log(error);
+          console.log("Resize succeessfully");
+        });
         res.json({ success: true, product });
       }).catch((e) => {
         console.log(e.message);
