@@ -1,12 +1,25 @@
 const router = require('express').Router();
 const Hotel = require('../models/Hotel');
+const Product = require('../models/Product');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
 router.get('/hotels', (req, res) => {
   Hotel.find({}).then((h) => {
     res.json({ success: true, hotels: h });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+// Products list
+router.get('/hotels/:id/products', (req, res) => {
+  Product
+    .find({ hotel: mongoose.Types.ObjectId(req.params.id) })
+    .then((products) => {
+    res.json({ success: true, products });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
   });
