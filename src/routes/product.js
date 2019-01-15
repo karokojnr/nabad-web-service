@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
     })
   }
 });
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage });
 
 // Products list
 router.get('/', (req, res) => {
@@ -68,11 +68,12 @@ router.post('/add', upload.single('image'), (req, res) => {
           srcPath: `public/images/uploads/${req.file.filename}`,
           dstPath: `public/images/uploads/thumbs/${req.file.filename}`,
           width: 300,
-          height:300
+          height: 300
         }, function(error, stdin, stdout) {
           if (error)
             console.log(error);
-          console.log("Resize succeessfully");
+          else
+            console.log("Image resized successfully");
         });
         res.json({ success: true, product });
       }).catch((e) => {

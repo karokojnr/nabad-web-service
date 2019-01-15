@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const Joi = require('joi');
+
+const { Schema, Types } = mongoose;
 
 const UserSchema = new Schema({
   fullName: {
@@ -16,7 +18,7 @@ const UserSchema = new Schema({
     unique: true
   },
   hotel: {
-    type: String,
+    type: Types.ObjectId,
     required: true
   },
   isActive: {
@@ -25,7 +27,7 @@ const UserSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   role: {
     type: String,
@@ -33,9 +35,12 @@ const UserSchema = new Schema({
   },
   permissions: {
     type: Array,
-    default: ['products']
+    default: ['/products', '/orders']
   }
 }, { timestamps: true });
 
+const emailSchema = Joi.string().email().lowercase().required();
+
+UserSchema.methods.validateEmail = (email) => Joi.validate(email, emailSchema);
 
 module.exports = mongoose.model('User', UserSchema);
