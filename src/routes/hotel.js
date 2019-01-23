@@ -73,7 +73,7 @@ router.post('/login', (req, res) => {
           email: hotel.businessEmail,
           id: hotel._id
         }, process.env.SESSIONKEY);
-        return res.json({ success: true, token: { token, hotelId: hotel._id } });
+        return res.json({ success: true, token, hotel });
       } else {
         throw new Error('Invalid email/password');
       }
@@ -86,7 +86,7 @@ router.post('/login', (req, res) => {
             email: user.email,
             id: user._id
           }, process.env.SESSIONKEY);
-          res.json({ success: true, token: { token , hotelId: hotel._id } });
+          res.json({ success: true, token, hotel });
         } else {
           throw new Error('Invalid email/password');
         }
