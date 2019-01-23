@@ -41,6 +41,7 @@ router.get('/', (req, res) => {
   Product
     .find(params)
     // .populate('hotel', 'businessName')
+    .sort({ createdAt: 'desc' })
     .then((h) => {
     res.json({ success: true, products: h });
   }).catch((e) => {
