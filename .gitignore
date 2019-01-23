@@ -6,3 +6,4 @@ yarn-error.log
 .env
 .nyc_output
 coverage
+public/images/uploads

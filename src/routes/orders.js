@@ -28,8 +28,8 @@ router.get('/hotel/orders', (req, res) => {
   let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
   Order
     .find(params)
-    .populate('users', 'servedBy')
-    .populate('hotel', 'businessName')
+    // .populate('users', 'servedBy')
+    // .populate('hotel', 'businessName')
     .then((orders) => {
       res.json({ success: true, orders });
     }).catch((e) => {
@@ -78,6 +78,7 @@ router.post('/orders/add', (req, res) => {
   if (Object.keys(req.body).length === 0) {
     res.status(400).json({ success: false, message: 'A request body is required' });
   } else {
+    console.log(req.body);
     const payments = req.body.payments;
     const items = req.body.items;
     delete req.body.items;
@@ -94,7 +95,7 @@ router.post('/orders/add', (req, res) => {
       if (!!error){
         order.items.push(orderItem);
       } else {
-        res.status(400).json({ success: false, message: error.message });
+        res.json({ success: false, message: error.message });
       }
     });
     _.each(payments, (payment) => {
@@ -107,14 +108,14 @@ router.post('/orders/add', (req, res) => {
       if (!!error){
         order.payments.push(orderPayment);
       } else {
-        res.status(400).json({ success: false, message: error.message });
+        res.json({ success: false, message: error.message });
       }
     });
 
     order.save().then((order) => {
       res.json({ success: true, order });
     }).catch((e) => {
-      res.status(400).json({ success: false, message: e.message });
+      res.json({ success: false, message: e.message });
     });
   }
 });

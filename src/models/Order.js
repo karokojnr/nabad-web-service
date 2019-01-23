@@ -60,9 +60,17 @@ const OrderSchema = new Schema({
     type: Number,
     require: true
   },
+  totalPrice: {
+    type: Number,
+    require: true
+  },
   items: [OrderItemsSchema],
   payments: [OrderPaymentsSchema],
   servedBy: {
+    type: Types.ObjectId,
+    ref: 'User'
+  },
+  customerId: {
     type: Types.ObjectId,
     ref: 'User'
   }
