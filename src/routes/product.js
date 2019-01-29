@@ -28,7 +28,6 @@ router.get('/', (req, res) => {
     let token = "";
     if (req.headers['x-token'] !== undefined) token = req.headers['x-token'];
     if (req.query['token'] !== undefined) token = req.query['token'];
-    console.log(token);
     jwt.verify(token, process.env.SESSIONKEY, function(error, decode) {
       if (error) {
         throw new Error(error.message);

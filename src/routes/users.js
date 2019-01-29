@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const User = require('../models/User');
+const Hotel = require('../models/Hotel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -25,7 +26,7 @@ function getToken(req, res, next) {
   next();
 }
 
-router.get('/', getToken, (req, res) => {
+router.get('/admin/users/', getToken, (req, res) => {
   User.find({ hotel: token.id }).then((users) => {
     res.json({ success: true, users });
   }).catch((e) => {
@@ -34,7 +35,7 @@ router.get('/', getToken, (req, res) => {
 });
 
 // Get specific user
-router.get('/:id', getToken, (req, res) => {
+router.get('/admin/users/:id', getToken, (req, res) => {
   User.findById(req.params.id).then((user) => {
     res.json({ success: true, user });
   }).catch((e) => {
@@ -42,7 +43,7 @@ router.get('/:id', getToken, (req, res) => {
   });
 });
 
-router.post('/add', getToken, (req, res) => {
+router.post('/admin/users/add', getToken, (req, res) => {
     if (Object.keys(req.body).length === 0) {
         res.status(404).json({ success: false, message: 'A request body is required' });
     }
@@ -58,7 +59,7 @@ router.post('/add', getToken, (req, res) => {
     });
 });
 
-router.put('/activate/:id', getToken, (req, res) => {
+router.put('/admin/users/activate/:id', getToken, (req, res) => {
   User.findById(req.params.id).then((user) => {
     // Negate the current status
     user.isActive = !user.isActive;
@@ -70,7 +71,7 @@ router.put('/activate/:id', getToken, (req, res) => {
   });
 });
 
-router.put('/edit/:id', getToken, (req, res) => {
+router.put('/admin/users/edit/:id', getToken, (req, res) => {
   if (Object.keys(req.body).length === 0) {
       res.status(404).json({ success: false, message: 'A request body is required' });
   }
@@ -81,7 +82,7 @@ router.put('/edit/:id', getToken, (req, res) => {
   });
 });
 
-router.delete('/delete/:id', getToken, (req, res) => {
+router.delete('/admin/users/delete/:id', getToken, (req, res) => {
   User.findByIdAndDelete(req.params.id).then((user) => {
     // Return null user
     res.json({ success: true, user });
@@ -90,6 +91,21 @@ router.delete('/delete/:id', getToken, (req, res) => {
   });
 });
 
+router.put('/hotel/token', getToken, (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      res.status(404).json({ success: false, message: 'A request body is required' });
+  }
+  Hotel.findOneAndUpdate( { _id: token.id }, { FCMToken: req.body.token }, { new: true }).then((hotel) => {
+    res.json({ 
+      success: true,
+      token: hotel.token,
+      hotelId: hotel._id
+    });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 module.exports = (app) => {
-  app.use('/admin/users', router);
+  app.use('/', router);
 }

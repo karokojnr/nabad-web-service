@@ -121,17 +121,14 @@ router.post('/orders/add', (req, res) => {
 });
 
 // Mark order as complete
-router.put('/orders/:id/complete', (req, res) => {
-  Order.findById(req.params.id).then((order) => {
-    // Negate the current status
-    order.status = 'COMPLETE';
-    return order.save();
-  }).then((order) => {
+router.put('/orders/:id/:status', (req, res) => {
+  Order.findByIdAndUpdate(req.params.id, { status: req.params.status }, { new: true }).then((order) => {
     res.json({ success: true, order });
   }).catch((e) => {
     res.status(400).json({ success: false, message: e.message });
   });
 });
+
 
 // Edit order
 router.put('/orders/:id/edit', (req, res) => {

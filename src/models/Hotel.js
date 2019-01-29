@@ -39,6 +39,10 @@ const HotelSchema = new Schema({
   paymentStatus: {
     type: String,
     default: 'UNPAID'
+  },
+  FCMToken: {
+    type: String,
+    default: ""
   }
 }, { timestamps: true });
 
