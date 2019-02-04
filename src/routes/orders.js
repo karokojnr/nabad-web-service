@@ -4,9 +4,38 @@ const { Order,
     OrderItemSchema,
     validateOrderPaymentObject,
     validateOrderItemObject } = require('../models/Order');
+const Hotel = require('../models/Hotel');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const axios = require('axios');
+const https = require('https');
+const fs = require('fs');
+const {google} = require('googleapis');
+
+var MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
+var SCOPES = [MESSAGING_SCOPE];
+
+function getAccessToken() {
+  return new Promise(function(resolve, reject) {
+    var key = require('../../service-account.json');
+    var jwtClient = new google.auth.JWT(
+      key.client_email,
+      null,
+      key.private_key,
+      SCOPES,
+      null
+    );
+    jwtClient.authorize(function(err, tokens) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(tokens.access_token);
+    });
+  });
+}
+
 
 // Orders list for a hotel
 router.get('/hotel/orders', (req, res) => {
@@ -83,8 +112,10 @@ router.post('/orders/add', (req, res) => {
     delete req.body.items;
     delete req.body.payments;
     let order = new Order(req.body);
+    let itemsMessage = '';
 
     _.each(items, (item) => {
+      itemsMessage += `${item.qty} ${item.name} @ ${parseInt(item.price)*parseInt(item.qty)} \n`;
       let orderItem = new OrderItemSchema({
         name: item.name,
         qty: item.qty,
@@ -112,6 +143,34 @@ router.post('/orders/add', (req, res) => {
     });
 
     order.save().then((order) => {
+      Hotel.findById(order.hotel).then(hotel => {
+        getAccessToken().then(accessToken => {
+          axios.post( `https://fcm.googleapis.com/v1/projects/nadab-9a76a/messages:send`, 
+            {
+              "message":{
+                "token" : hotel.FCMToken,
+                "notification" : {
+                  "body" : itemsMessage,
+                  "title" : "You have a new order"
+                  }
+               }
+            },
+            {
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }).then( response => {
+            console.log("Notification sent...");
+          }).catch(error => {
+            console.log(error.message);
+          });
+        }).catch(error => {
+          console.log(error);
+        });
+      }).catch(error => {
+        console.log(error);
+      });
       res.json({ success: true, order });
     }).catch((e) => {
       res.json({ success: false, message: e.message });

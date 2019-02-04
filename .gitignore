@@ -7,3 +7,4 @@ yarn-error.log
 .nyc_output
 coverage
 public/images/uploads
+service-account.json
