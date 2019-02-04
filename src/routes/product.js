@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const im = require('imagemagick');
 
 const storage = multer.diskStorage({
-  destination: 'public/images/uploads',
+  destination: 'public/images/uploads/products',
   filename: function (req, file, cb) {
     crypto.pseudoRandomBytes(16, function (err, raw) {
       if (err) return cb(err)
@@ -66,8 +66,8 @@ router.post('/add', upload.single('image'), (req, res) => {
       product.image = `${req.file.filename}`;
       product.save().then((product) => {
         im.resize({
-          srcPath: `public/images/uploads/${req.file.filename}`,
-          dstPath: `public/images/uploads/thumbs/${req.file.filename}`,
+          srcPath: `public/images/uploads/products/${req.file.filename}`,
+          dstPath: `public/images/uploads/products/thumb_${req.file.filename}`,
           width: 300,
           height: 300
         }, function(error, stdin, stdout) {

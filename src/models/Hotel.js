@@ -36,6 +36,10 @@ const HotelSchema = new Schema({
     type: String,
     required: true
   },
+  image: {
+    type: String,
+    default: 'food.png'
+  },
   paymentStatus: {
     type: String,
     default: 'UNPAID'

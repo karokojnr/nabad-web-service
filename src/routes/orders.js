@@ -78,7 +78,6 @@ router.post('/orders/add', (req, res) => {
   if (Object.keys(req.body).length === 0) {
     res.status(400).json({ success: false, message: 'A request body is required' });
   } else {
-    console.log(req.body);
     const payments = req.body.payments;
     const items = req.body.items;
     delete req.body.items;

@@ -5,7 +5,22 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const im = require('imagemagick');
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
 
+const storage = multer.diskStorage({
+  destination: 'public/images/uploads/hotels',
+  filename: function (req, file, cb) {
+    crypto.pseudoRandomBytes(16, function (err, raw) {
+      if (err) return cb(err)
+
+      cb(null, raw.toString('hex') + path.extname(file.originalname))
+    })
+  }
+});
+const upload = multer({ storage: storage });
 router.get('/hotels', (req, res) => {
   Hotel.find({}).then((h) => {
     res.json({ success: true, hotels: h });
@@ -37,18 +52,36 @@ router.get('/search', (req, res) => {
   });
 });
 
-router.post('/register', (req, res) => {
+router.post('/register', upload.single('image'), (req, res) => {
   if (req.body === undefined) {
     throw new Error('A request body is required');
   }
   let hotel = new Hotel(req.body);
+  hotel.mobileNumber = parseInt(hotel.mobileNumber);
+  hotel.image = `${req.file.filename}`;
   bcrypt.hash(hotel.password, 10).then((hash) => {
     hotel.password = hash;
     return hotel.save();
   }).then((hotel) => {
     // TODO:: Send verification email ~ via a message broker
-    res.json({ success: true, hotel: hotel });
+    im.resize({
+      srcPath: `public/images/uploads/hotels/${req.file.filename}`,
+      dstPath: `public/images/uploads/hotels/thumb_${req.file.filename}`,
+      width: 300,
+      height: 300
+    }, function(error, stdin, stdout) {
+      if (error)
+        console.log(error);
+      else
+        console.log("Image resized successfully");
+    });
+    let token = jwt.sign({
+      email: hotel.email,
+      id: hotel._id
+    }, process.env.SESSIONKEY);
+    res.json({ success: true, hotel, token });
   }).catch((e) => {
+    console.log(e);
     res.status(404).json({ success: false, message: e.message });
   });
 });
