@@ -1,10 +1,26 @@
 const router = require('express').Router();
 const User = require('../models/User');
 const Hotel = require('../models/Hotel');
+const Customer = require('../models/Customer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const im = require('imagemagick');
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
 
 let token = {};
+const storage = multer.diskStorage({
+  destination: 'public/images/uploads/customers',
+  filename: function (req, file, cb) {
+    crypto.pseudoRandomBytes(16, function (err, raw) {
+      if (err) return cb(err)
+
+      cb(null, raw.toString('hex') + path.extname(file.originalname))
+    })
+  }
+});
+const upload = multer({ storage: storage });
 
 function getToken(req, res, next) {
   if (req.headers['x-token'] || req.query['token']) {
@@ -103,6 +119,87 @@ router.put('/hotel/token', getToken, (req, res) => {
     });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+router.put('/customer/token', getToken, (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      res.status(404).json({ success: false, message: 'A request body is required' });
+  }
+  Customer.findOneAndUpdate( { _id: token.id }, { FCMToken: req.body.token }, { new: true }).then((customer) => {
+    res.json({ 
+      success: true,
+      token: customer.FCMToken,
+      userId: customer._id
+    });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+router.post('/customer/login', (req, res) => {
+  try {
+    if (req.body.email === undefined || req.body.password === undefined) {
+      throw new Error('Email and password are required');
+    }
+  } catch (e) {
+    return res.json({ success: false, message: e.message });
+  }
+  let customer;
+  Customer.findOne({ email: req.body.email }).then((cust) => {
+    customer = cust;
+    if (customer) return bcrypt.compare(req.body.password, customer.password);
+    else return res.json({ success: false, message: "User doesn't exist" });
+  }).then((status) => {
+    if (typeof status === 'boolean') {
+      if (status) {
+        let token = jwt.sign({
+          email: customer.emai,
+          id: customer._id
+        }, process.env.SESSIONKEY);
+        customer.mobileNumber = `+254${customer.mobileNumber}`;
+        return res.json({ success: true, token, customer });
+      } else {
+        throw new Error('Invalid email/password');
+      }
+    }
+  }).catch((e) => {
+    res.json({ success: false, message: e.message });
+  });
+});
+
+router.post('/customer/register', upload.single('profile'), (req, res) => {
+  if (req.body === undefined) {
+    throw new Error('A request body is required');
+  }
+  let customer = new Customer(req.body);
+  customer.mobileNumber = parseInt(customer.mobileNumber);
+  customer.profile = `${req.file.filename}`;
+  bcrypt.hash(customer.password, 10).then((hash) => {
+    customer.password = hash;
+    return customer.save();
+  }).then((customer) => {
+    // TODO:: Send verification email ~ via a message broker
+    im.resize({
+      srcPath: `public/images/uploads/customers/${req.file.filename}`,
+      dstPath: `public/images/uploads/customers/thumb_${req.file.filename}`,
+      width: 300,
+      height: 300
+    }, function(error, stdin, stdout) {
+      if (error)
+        console.log(error);
+      else
+        console.log("Image resized successfully");
+    });
+    let token = jwt.sign({
+      email: customer.email,
+      id: customer._id
+    }, process.env.SESSIONKEY);
+    customer.mobileNumber = `+254${customer.mobileNumber}`;
+    res.json({ success: true, customer, token });
+  }).catch((e) => {
+    console.log(e);
+    res.json({ success: false, message: e.message });
   });
 });
 

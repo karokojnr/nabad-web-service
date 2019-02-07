@@ -72,9 +72,9 @@ const OrderSchema = new Schema({
   },
   customerId: {
     type: Types.ObjectId,
-    ref: 'User'
+    ref: 'Customer'
   }
-});
+}, { timestamps: true });
 
 exports.validateOrderItemObject = (item) => Joi.validate(item, OrderItemJoiSchema);
 exports.validateOrderPaymentObject = (payment) => Joi.validate(payment, OrderPaymentsJoiSchema);

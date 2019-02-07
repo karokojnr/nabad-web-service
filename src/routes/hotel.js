@@ -21,6 +21,7 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage: storage });
+
 router.get('/hotels', (req, res) => {
   Hotel.find({}).then((h) => {
     res.json({ success: true, hotels: h });
@@ -106,6 +107,7 @@ router.post('/login', (req, res) => {
           email: hotel.businessEmail,
           id: hotel._id
         }, process.env.SESSIONKEY);
+        console.log(hotel)
         return res.json({ success: true, token, hotel });
       } else {
         throw new Error('Invalid email/password');
