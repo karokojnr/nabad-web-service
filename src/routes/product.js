@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const im = require('imagemagick');
+const { ObjectId } = mongoose.Schema;
 
 const storage = multer.diskStorage({
   destination: 'public/images/uploads/products',
@@ -96,11 +97,34 @@ router.put('/activate/:id', (req, res) => {
   });
 });
 
+router.put('/edit/:id/image', upload.single('image'), (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      return res.status(404).json({ success: false, message: 'A request body is required' });
+  }
+  // TODO:: Delete existing profile
+  Product.findOneAndUpdate( req.params.id, { name: req.body.name, price: req.body.price, image: req.file.filename }, { new: true } ).then((product) => {
+    im.resize({
+          srcPath: `public/images/uploads/products/${req.file.filename}`,
+          dstPath: `public/images/uploads/products/thumb_${req.file.filename}`,
+          width: 300,
+          height: 300
+        }, function(error, stdin, stdout) {
+          if (error)
+            console.log(error);
+          else
+            console.log("Image resized successfully");
+        });
+    res.json({ success: true, product });
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 router.put('/edit/:id', (req, res) => {
   if (Object.keys(req.body).length === 0) {
       return res.status(404).json({ success: false, message: 'A request body is required' });
   }
-  Product.findByIdAndUpdate(req.params.id, req.body, { new: true }).then((product) => {
+  Product.findOneAndUpdate( req.params.id, { name: req.body.name, price: req.body.price }, { new: true } ).then((product) => {
     res.json({ success: true, product });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
