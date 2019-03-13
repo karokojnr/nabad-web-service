@@ -102,8 +102,12 @@ router.put('/edit/:id/image', upload.single('image'), (req, res) => {
       return res.status(404).json({ success: false, message: 'A request body is required' });
   }
   // TODO:: Delete existing profile
-  Product.findOneAndUpdate( req.params.id, { name: req.body.name, price: req.body.price, image: req.file.filename }, { new: true } ).then((product) => {
-    im.resize({
+  Product.findById( mongoose.Types.ObjectId(req.params.id)).then((product) => {
+    product.name = req.body.name;
+    product.price = parseInt(req.body.price);
+    product.image = req.file.filename;
+    product.save().then(p => {
+      im.resize({
           srcPath: `public/images/uploads/products/${req.file.filename}`,
           dstPath: `public/images/uploads/products/thumb_${req.file.filename}`,
           width: 300,
@@ -114,7 +118,10 @@ router.put('/edit/:id/image', upload.single('image'), (req, res) => {
           else
             console.log("Image resized successfully");
         });
-    res.json({ success: true, product });
+      res.json({ success: true, p });
+    }).catch((e) => {
+      res.status(400).json({ success: false, message: e.message });
+    })
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
   });
@@ -124,8 +131,14 @@ router.put('/edit/:id', (req, res) => {
   if (Object.keys(req.body).length === 0) {
       return res.status(404).json({ success: false, message: 'A request body is required' });
   }
-  Product.findOneAndUpdate( req.params.id, { name: req.body.name, price: req.body.price }, { new: true } ).then((product) => {
-    res.json({ success: true, product });
+  Product.findById( mongoose.Types.ObjectId(req.params.id)).then((product) => {
+    product.name = req.body.name;
+    product.price = parseInt(req.body.price);
+    product.save().then(p => {
+      res.json({ success: true, p });
+    }).catch((e) => {
+      res.status(400).json({ success: false, message: e.message });
+    })
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
   });

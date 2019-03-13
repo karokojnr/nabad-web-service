@@ -76,7 +76,6 @@ router.get('/hotel/orders', (req, res) => {
     // .populate('users', 'servedBy')
     // .populate('hotel', 'businessName')
     .then((orders) => {
-      console.log(orders);
       res.json({ success: true, orders });
     }).catch((e) => {
     res.status(400).json({ success: false, message: e.message });
@@ -132,7 +131,7 @@ router.post('/orders/add', (req, res) => {
     let itemsMessage = '';
 
     _.each(items, (item) => {
-      itemsMessage += `${item.qty} ${item.name} @ ${parseInt(item.price)*parseInt(item.qty)} \n`;
+      itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
       let orderItem = new OrderItemSchema({
         name: item.name,
         qty: item.qty,
@@ -191,6 +190,79 @@ router.post('/orders/add', (req, res) => {
       }).catch(error => {
         console.log(error);
       });
+      console.log(order);
+      res.json({ success: true, order });
+    }).catch((e) => {
+      res.json({ success: false, message: e.message });
+    });
+  }
+});
+
+router.post('/orders/:id/addItem', async (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    res.status(400).json({ success: false, message: 'A request body is required' });
+  } else {
+  
+    const items = [req.body];
+    let itemsMessage = '';
+    let order = {};
+    try{
+      order = await Order.findById(req.params.id);
+    } catch{(e) => {
+      console.log(e.message);
+      return res.json({ success: false, message: e.message });
+    }};
+
+    _.each(items, (item) => {
+      itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
+      let orderItem = new OrderItemSchema({
+        name: item.name,
+        qty: item.qty,
+        price: item.price
+      });
+      let { error } = validateOrderItemObject(orderItem);
+      if (!!error){
+        order.totalItems += orderItem.qty;
+        order.totalPrice += orderItem.price;
+        order.items.push(orderItem);
+      } else {
+        res.json({ success: false, message: error.message });
+      }
+    });
+
+    order.save().then((order) => {
+      Hotel.findById(order.hotel).then(hotel => {
+        getAccessToken().then(accessToken => {
+          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
+            {
+              "message":{
+                "token" : hotel.FCMToken,
+                "notification" : {
+                  "body" : itemsMessage,
+                  "title" : "You have a new order"
+                },
+                "data": {
+                  "orderID": order._id,
+                }
+              }  
+            },
+            {
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }).then( response => {
+            console.log("Notification sent...");
+          }).catch(error => {
+            console.log(error);
+          });
+        }).catch(error => {
+          console.log(error);
+        });
+      }).catch(error => {
+        console.log(error);
+      });
+      console.log(order);
       res.json({ success: true, order });
     }).catch((e) => {
       res.json({ success: false, message: e.message });
