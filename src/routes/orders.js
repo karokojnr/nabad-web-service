@@ -73,9 +73,10 @@ router.get('/hotel/orders', (req, res) => {
   Order
     .find(params)
     .sort({ 'createdAt': 'desc'})
-    // .populate('users', 'servedBy')
+    .populate('customerId', 'fullName')
     // .populate('hotel', 'businessName')
     .then((orders) => {
+      console.log(orders)
       res.json({ success: true, orders });
     }).catch((e) => {
     res.status(400).json({ success: false, message: e.message });
@@ -182,13 +183,13 @@ router.post('/orders/add', (req, res) => {
           }).then( response => {
             console.log("Notification sent...");
           }).catch(error => {
-            console.log(error);
+            console.log(error.message);
           });
         }).catch(error => {
-          console.log(error);
+          console.log(error.message);
         });
       }).catch(error => {
-        console.log(error);
+        console.log(error.message);
       });
       console.log(order);
       res.json({ success: true, order });
@@ -224,6 +225,7 @@ router.post('/orders/:id/addItem', async (req, res) => {
       if (!!error){
         order.totalItems += orderItem.qty;
         order.totalPrice += orderItem.price;
+        order.status = 'RE-ORDER';
         order.items.push(orderItem);
       } else {
         res.json({ success: false, message: error.message });
@@ -254,13 +256,13 @@ router.post('/orders/:id/addItem', async (req, res) => {
           }).then( response => {
             console.log("Notification sent...");
           }).catch(error => {
-            console.log(error);
+            console.log(error.message);
           });
         }).catch(error => {
-          console.log(error);
+          console.log(error.message);
         });
       }).catch(error => {
-        console.log(error);
+        console.log(error.message);
       });
       console.log(order);
       res.json({ success: true, order });
@@ -299,10 +301,10 @@ router.put('/orders/:id/:status', (req, res) => {
           }).then( response => {
             console.log("Notification sent...");
           }).catch(error => {
-            console.log(error);
+            console.log(error.message);
           });
         }).catch(error => {
-          console.log(error);
+          console.log(error.message);
         });
     res.json({ success: true, order });
   }).catch((e) => {

@@ -18,7 +18,12 @@ const OrderItemsSchema = new Schema({
   price: {
     type: Number,
     required: true
-  }
+  },
+  status: {
+    type: String,
+    default: 'NEW'
+  },
+  reason: String
 });
 
 const OrderItemJoiSchema = Joi.object({
