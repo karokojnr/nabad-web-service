@@ -209,10 +209,9 @@ router.post('/orders/:id/addItem', async (req, res) => {
     let order = {};
     try{
       order = await Order.findById(req.params.id);
-    } catch((e) => {
-      console.log(e.message);
+    } catch(e) {
       return res.json({ success: false, message: e.message });
-    });
+    };
 
     _.each(items, (item) => {
       itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
