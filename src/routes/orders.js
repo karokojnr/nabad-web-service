@@ -44,9 +44,14 @@ function getNotificationMessage(orderStatus) {
   let message = 'Your order was updated';
   let update = 'update';
 
-  if(orderStatus == 'BILLS' || orderStatus == 'NEW') {
+  if(orderStatus == 'BILLS') {
     message = 'Your order has been accepted and will be delivered soon';
     update = 'accepted';
+  }
+
+  if(orderStatus == 'NEW') {
+    message = 'You have a new order';
+    update = '';
   }
 
   if(orderStatus == 'PAID') {
@@ -103,6 +108,8 @@ function sendNotification(authToken, deviceToken, title, body, order) {
     console.log(error.message);
   });
 }
+
+function addOrder(){}
 
 // Orders list for a hotel
 router.get('/hotel/orders', (req, res) => {
@@ -174,9 +181,9 @@ router.get('/orders/:id', (req, res) => {
 });
 
 // Add a new order
-router.post('/orders/add', (req, res) => {
+router.post('/orders/add', (req, res) =>{
   if (Object.keys(req.body).length === 0) {
-    res.status(400).json({ success: false, message: 'A request body is required' });
+    res.json({ success: false, message: 'A request body is required' });
   } else {
     const payments = req.body.payments;
     const items = req.body.items;
@@ -213,6 +220,7 @@ router.post('/orders/add', (req, res) => {
       }
     });
 
+    let {message, update } = getNotificationMessage(order.status);
     order.save().then((order) => {
       Hotel.findById(order.hotel).then(hotel => {
         getAccessToken().then(accessToken => {
@@ -222,6 +230,7 @@ router.post('/orders/add', (req, res) => {
         });
       }).catch(error => {
         console.log(error.message);
+        return res.json({ success: false, message: error.message });
       });
       res.json({ success: true, order });
     }).catch((e) => {
@@ -243,6 +252,11 @@ router.post('/orders/:id/addItem', async (req, res) => {
     } catch(e) {
       return res.json({ success: false, message: e.message });
     };
+
+    // if(order.status == 'COMPLETE' || order.status == 'HIDDEN'){
+    //   addOrder(req, res);
+    //   return;
+    // }
 
     _.each(items, (item) => {
       itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
@@ -284,15 +298,16 @@ router.post('/orders/:id/addItem', async (req, res) => {
 router.put('/orders/:id/:status', (req, res) => {
   Order
     .findByIdAndUpdate(req.params.id, { status: req.params.status }, { new: true })
+    .populate('customerId', 'fullName')
     .then(async (order) => {
       let customer = await Customer.findById(order.customerId);
       let { message, update } = getNotificationMessage(order.status);
       getAccessToken().then(accessToken => {
-        sendNotification(accessToken, customer.FCMToken, update, message, order);
-        }).catch(error => {
-          console.log(error.message);
-        });
-    res.json({ success: true, order });
+        (order.status !== 'HIDDEN') ? sendNotification(accessToken, customer.FCMToken, update, message, order): "";
+      }).catch(error => {
+        console.log(error.message);
+      });
+      res.json({ success: true, order });
   }).catch((e) => {
     console.log(e)
     res.status(400).json({ success: false, message: e.message });
