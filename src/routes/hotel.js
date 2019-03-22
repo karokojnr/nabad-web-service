@@ -33,7 +33,10 @@ router.get('/hotels', (req, res) => {
 // Products list
 router.get('/hotels/:id/products', (req, res) => {
   Product
-    .find({ hotel: mongoose.Types.ObjectId(req.params.id) })
+    .find({ $and: [
+      { hotel: mongoose.Types.ObjectId(req.params.id) },
+      { sellingStatus: true }
+    ] })
     .then((products) => {
     res.json({ success: true, products });
   }).catch((e) => {

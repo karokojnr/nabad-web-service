@@ -132,8 +132,9 @@ router.put('/edit/:id', (req, res) => {
       return res.status(404).json({ success: false, message: 'A request body is required' });
   }
   Product.findById( mongoose.Types.ObjectId(req.params.id)).then((product) => {
-    product.name = req.body.name;
-    product.price = parseInt(req.body.price);
+    if(req.body.name) product.name = req.body.name;
+    if(req.body.price) product.price = parseInt(req.body.price);
+    if(req.body.sellingStatus) product.sellingStatus = req.body.sellingStatus == 'true'? true: false;
     product.save().then(p => {
       res.json({ success: true, p });
     }).catch((e) => {
