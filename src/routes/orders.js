@@ -40,8 +40,11 @@ function getAccessToken() {
 }
 
 function getNotificationMessage(orderStatus) {
-  let message, update;
-  if(orderStatus == 'ACCEPTED') {
+  console.log(orderStatus);
+  let message = 'Your order was updated';
+  let update = 'update';
+
+  if(orderStatus == 'BILLS' || orderStatus == 'NEW') {
     message = 'Your order has been accepted and will be delivered soon';
     update = 'accepted';
   }
@@ -51,16 +54,55 @@ function getNotificationMessage(orderStatus) {
     update = 'paid';
   }
 
+  if(orderStatus == 'SALES') {
+    message = 'Your bill is ready';
+    update = 'billed';
+  }
+
+
   if( orderStatus == 'REJECTED') {
     message = 'Your order was rejected';
     update = 'rejected';
-  } else {
-    message = 'Your order was updated';
-    update = 'update';
   }
+
+  if(orderStatus == 'RE-ORDER') {
+    message = 'Item added to order';
+    update = 're-ordered';
+  }
+
+  if(orderStatus == 'COMPLETE') {
+    message = 'Your order is complete. Thank you for using Nadab Hotel Services';
+    update = 'complete';
+  }
+
+  
   return { message, update };
 }
 
+function sendNotification(authToken, deviceToken, title, body, order) {
+  axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
+    {
+      "message":{
+        "token" : deviceToken,
+        "data": {
+          "orderID": order._id,
+          "status": order.status,
+          "body" : body,
+          "title" : `Order ${title}`
+        }
+      }  
+    },
+    {
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`
+    }
+  }).then( response => {
+    console.log("Notification sent...");
+  }).catch(error => {
+    console.log(error.message);
+  });
+}
 
 // Orders list for a hotel
 router.get('/hotel/orders', (req, res) => {
@@ -86,7 +128,6 @@ router.get('/hotel/orders', (req, res) => {
     .populate('customerId', 'fullName')
     // .populate('hotel', 'businessName')
     .then((orders) => {
-      console.log(orders)
       res.json({ success: true, orders });
     }).catch((e) => {
     res.status(400).json({ success: false, message: e.message });
@@ -175,36 +216,13 @@ router.post('/orders/add', (req, res) => {
     order.save().then((order) => {
       Hotel.findById(order.hotel).then(hotel => {
         getAccessToken().then(accessToken => {
-          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
-            {
-              "message":{
-                "token" : hotel.FCMToken,
-                "notification" : {
-                  "body" : itemsMessage,
-                  "title" : "You have a new order"
-                },
-                "data": {
-                  "orderID": order._id,
-                }
-              }  
-            },
-            {
-             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          }).then( response => {
-            console.log("Notification sent...");
-          }).catch(error => {
-            console.log(error.message);
-          });
+          sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
         }).catch(error => {
           console.log(error.message);
         });
       }).catch(error => {
         console.log(error.message);
       });
-      console.log(order);
       res.json({ success: true, order });
     }).catch((e) => {
       res.json({ success: false, message: e.message });
@@ -244,39 +262,17 @@ router.post('/orders/:id/addItem', async (req, res) => {
       }
     });
 
+    let { message, update } = getNotificationMessage(order.status);
     order.save().then((order) => {
       Hotel.findById(order.hotel).then(hotel => {
         getAccessToken().then(accessToken => {
-          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
-            {
-              "message":{
-                "token" : hotel.FCMToken,
-                "notification" : {
-                  "body" : itemsMessage,
-                  "title" : "You have a  re-order"
-                },
-                "data": {
-                  "orderID": order._id,
-                }
-              }  
-            },
-            {
-             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          }).then( response => {
-            console.log("Notification sent...");
-          }).catch(error => {
-            console.log(error.message);
-          });
+          sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
         }).catch(error => {
           console.log(error.message);
         });
       }).catch(error => {
         console.log(error.message);
       });
-      console.log(order);
       res.json({ success: true, order });
     }).catch((e) => {
       res.json({ success: false, message: e.message });
@@ -292,29 +288,7 @@ router.put('/orders/:id/:status', (req, res) => {
       let customer = await Customer.findById(order.customerId);
       let { message, update } = getNotificationMessage(order.status);
       getAccessToken().then(accessToken => {
-          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
-            {
-              "message":{
-                "token" : customer.FCMToken,
-                "notification" : {
-                  "body" : message,
-                  "title" : `Order ${update}`
-                },
-                "data": {
-                  "orderID": order._id,
-                }
-              }  
-            },
-            {
-             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          }).then( response => {
-            console.log("Notification sent...");
-          }).catch(error => {
-            console.log(error.message);
-          });
+        sendNotification(accessToken, customer.FCMToken, update, message, order);
         }).catch(error => {
           console.log(error.message);
         });
@@ -336,36 +310,14 @@ router.put('/orders/:orderId/all/:status', (req, res) => {
         });
       // Move the order to bills if all have been accepted
       if(req.params.status == 'ACCEPTED') order.status = 'BILLS';
+      if(req.params.status == 'REJECTED') order.status = 'REJECTED';
       if(req.params.status == 'PAID') order.status = 'SALES';
       if(req.params.status == 'COMPLETE') order.status = 'COMPLETE';
       if(req.params.status == 'CANCEL') order.status = 'CANCELED';
 
       let { message, update } = getNotificationMessage(order.status);
       getAccessToken().then(accessToken => {
-          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
-            {
-              "message":{
-                "token" : customer.FCMToken,
-                "notification" : {
-                  "body" : message,
-                  "title" : `Order ${update}`
-                },
-                "data": {
-                  "orderID": order._id,
-                  "status": order.status
-                }
-              }  
-            },
-            {
-             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          }).then( response => {
-            console.log("Notification sent...");
-          }).catch(error => {
-            console.log(error.message);
-          });
+          sendNotification(accessToken, customer.FCMToken, update, message, order);
         }).catch(error => {
           console.log(error.message);
         });
@@ -386,29 +338,7 @@ router.put('/orders/:orderId/:itemId/:status', (req, res) => {
       let { message, update } = getNotificationMessage(order.status);
       order.items.filter((item) => { if(item._id == req.params.itemId) item.status = req.params.status; });
       getAccessToken().then(accessToken => {
-          axios.post( `https://fcm.googleapis.com/v1/projects/${projectID}/messages:send`, 
-            {
-              "message":{
-                "token" : customer.FCMToken,
-                "notification" : {
-                  "body" : message,
-                  "title" : `Order ${update}`
-                },
-                "data": {
-                  "orderID": order._id,
-                }
-              }  
-            },
-            {
-             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          }).then( response => {
-            console.log("Notification sent...");
-          }).catch(error => {
-            console.log(error.message);
-          });
+        sendNotification(accessToken, customer.FCMToken, update, message, order);
         }).catch(error => {
           console.log(error.message);
         });
