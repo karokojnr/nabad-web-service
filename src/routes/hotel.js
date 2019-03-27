@@ -135,6 +135,28 @@ router.post('/login', (req, res) => {
   });
 });
 
+router.put('/hotels/edit/:id', (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      return res.json({ success: false, message: 'A request body is required' });
+  }
+  Hotel.findById( mongoose.Types.ObjectId(req.params.id)).then((hotel) => {
+    if(req.body.fullName) hotel.applicantName = req.body.applicantName;
+    if(req.body.businessEmail) hotel.businessEmail = parseInt(req.body.businessEmail);
+    if(req.body.mobileNumber) hotel.mobileNumber = req.body.mobileNumber;
+    if(req.body.businessName) hotel.businessName = req.body.businessName;
+    if(req.body.city) hotel.city = req.body.city;
+    if(req.body.address) hotel.address = req.body.address;
+    if(req.body.payBillNo) hotel.payBillNo = req.body.payBillNo;
+    hotel.save().then(hotel => {
+      res.json({ success: true, hotel });
+    }).catch((e) => {
+      res.status(400).json({ success: false, message: e.message });
+    })
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 module.exports = (app) => {
     app.use('/', router);
 }
