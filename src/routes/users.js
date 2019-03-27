@@ -203,6 +203,25 @@ router.post('/customer/register', upload.single('profile'), (req, res) => {
   });
 });
 
+router.put('/customers/edit/:id', (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+      return res.json({ success: false, message: 'A request body is required' });
+  }
+  Customer.findById( mongoose.Types.ObjectId(req.params.id)).then((customer) => {
+    if(req.body.fullName) customer.fullName = req.body.fullName;
+    if(req.body.username) customer.username = parseInt(req.body.username);
+    if(req.body.mobileNumber) customer.mobileNumber = req.body.mobileNumber;
+    if(req.body.email) customer.email = req.body.email;
+    customer.save().then(customer => {
+      res.json({ success: true, customer });
+    }).catch((e) => {
+      res.status(400).json({ success: false, message: e.message });
+    })
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
 module.exports = (app) => {
   app.use('/', router);
 }
