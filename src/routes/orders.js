@@ -180,6 +180,34 @@ router.get('/orders/:id', (req, res) => {
   });
 });
 
+// Orders list for a customer <customer app>
+router.get('/customer/orders', (req, res) => {
+  let customer = {}
+
+  if (req.headers['x-token'] || req.query['token']) {
+    let token = "";
+    if (req.headers['x-token'] !== undefined) token = req.headers['x-token'];
+    if (req.query['token'] !== undefined) token = req.query['token'];
+    jwt.verify(token, process.env.SESSIONKEY, function(error, decode) {
+      if (error) {
+        throw new Error(error.message);
+      } else {
+        customer = decode;
+      }
+    });
+  }
+
+  let params = customer.id ? { customerId: mongoose.Types.ObjectId(customer.id) } : {};
+  Order
+    .find(params)
+    .populate('hotel', 'businessName')
+    .then((orders) => {
+      res.json({ success: true, orders });
+    }).catch((e) => {
+    res.status(400).json({ success: false, message: e.message });
+  });
+});
+
 // Add a new order
 router.post('/orders/add', (req, res) =>{
   if (Object.keys(req.body).length === 0) {
@@ -190,6 +218,7 @@ router.post('/orders/add', (req, res) =>{
     delete req.body.items;
     delete req.body.payments;
     let order = new Order(req.body);
+    order.hotelId = req.body.hotelId;
     let itemsMessage = '';
 
     _.each(items, (item) => {
@@ -221,8 +250,10 @@ router.post('/orders/add', (req, res) =>{
     });
 
     let {message, update } = getNotificationMessage(order.status);
-    order.save().then((order) => {
-      Hotel.findById(order.hotel).then(hotel => {
+    order.save().then((o) => {
+      Hotel.findById(req.body.hotelId).then(hotel => {
+        order = o;
+        order.hotel = hotel;
         getAccessToken().then(accessToken => {
           sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
         }).catch(error => {
@@ -277,6 +308,7 @@ router.post('/orders/:id/addItem', async (req, res) => {
     });
 
     let { message, update } = getNotificationMessage(order.status);
+    console.log(order);
     order.save().then((order) => {
       Hotel.findById(order.hotel).then(hotel => {
         getAccessToken().then(accessToken => {

@@ -57,6 +57,9 @@ const OrderSchema = new Schema({
     default: 'NEW'
   },
   hotel: {
+    type: Object
+  },
+  hotelId: {
     type: Types.ObjectId,
     ref: 'Hotel',
     require: true
