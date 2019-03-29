@@ -308,9 +308,8 @@ router.post('/orders/:id/addItem', async (req, res) => {
     });
 
     let { message, update } = getNotificationMessage(order.status);
-    console.log(order);
     order.save().then((order) => {
-      Hotel.findById(order.hotel).then(hotel => {
+      Hotel.findById(order.hotelId).then(hotel => {
         getAccessToken().then(accessToken => {
           sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
         }).catch(error => {
@@ -361,7 +360,7 @@ router.put('/orders/:orderId/all/:status', (req, res) => {
       if(req.params.status == 'PAID') order.status = 'SALES';
       if(req.params.status == 'COMPLETE') order.status = 'COMPLETE';
       if(req.params.status == 'CANCEL') order.status = 'CANCELED';
-
+      
       let { message, update } = getNotificationMessage(order.status);
       getAccessToken().then(accessToken => {
           sendNotification(accessToken, customer.FCMToken, update, message, order);
@@ -382,6 +381,7 @@ router.put('/orders/:orderId/:itemId/:status', (req, res) => {
     .populate('customerId', 'fullName')
     .then(async (order) => {
       let customer = await Customer.findById(order.customerId);
+      if(order.status == 'NEW') order.status = 'BILLS';
       let { message, update } = getNotificationMessage(order.status);
       order.items.filter((item) => { if(item._id == req.params.itemId) item.status = req.params.status; });
       getAccessToken().then(accessToken => {
