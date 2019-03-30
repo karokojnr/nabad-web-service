@@ -128,7 +128,7 @@ router.get('/hotel/orders', (req, res) => {
     });
   }
 
-  let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
+  let params = hotel.id ? { hotelId: mongoose.Types.ObjectId(hotel.id) } : {};
   Order
     .find(params)
     .sort({ 'createdAt': 'desc'})
@@ -158,7 +158,7 @@ router.get('/user/orders', (req, res) => {
     });
   }
 
-  let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
+  let params = hotel.id ? { hotelId: mongoose.Types.ObjectId(hotel.id) } : {};
   Order
     .find(params)
     .then((orders) => {
