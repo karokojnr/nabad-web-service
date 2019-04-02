@@ -137,7 +137,7 @@ router.get('/hotel/orders', (req, res) => {
     .then((orders) => {
       res.json({ success: true, orders });
     }).catch((e) => {
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -164,7 +164,7 @@ router.get('/user/orders', (req, res) => {
     .then((orders) => {
       res.json({ success: true, orders });
     }).catch((e) => {
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -176,7 +176,7 @@ router.get('/orders/:id', (req, res) => {
   .then((order) => {
     res.json({ success: true, order });
   }).catch((e) => {
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -204,7 +204,7 @@ router.get('/customer/orders', (req, res) => {
     .then((orders) => {
       res.json({ success: true, orders });
     }).catch((e) => {
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -272,7 +272,7 @@ router.post('/orders/add', (req, res) =>{
 
 router.post('/orders/:id/addItem', async (req, res) => {
   if (Object.keys(req.body).length === 0) {
-    res.status(400).json({ success: false, message: 'A request body is required' });
+    res.json({ success: false, message: 'A request body is required' });
   } else {
   
     const items = [req.body];
@@ -336,7 +336,7 @@ router.put('/orders/:id/:status', (req, res) => {
       res.json({ success: true, order });
   }).catch((e) => {
     console.log(e)
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -367,7 +367,7 @@ router.put('/orders/:orderId/all/:status', (req, res) => {
     res.json({ success: true, order });
   }).catch((e) => {
     console.log(e)
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
@@ -394,7 +394,7 @@ router.put('/orders/:orderId/:itemId/:status', (req, res) => {
     res.json({ success: true, order });
   }).catch((e) => {
     console.log(e)
-    res.status(400).json({ success: false, message: e.message });
+    res.json({ success: false, message: e.message });
   });
 });
 
