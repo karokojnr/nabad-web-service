@@ -72,6 +72,10 @@ const OrderSchema = new Schema({
     type: Number,
     require: true
   },
+  totalBill: {
+    type: Number,
+    default: 0.00
+  },
   items: [OrderItemsSchema],
   payments: [OrderPaymentsSchema],
   servedBy: {

@@ -284,11 +284,6 @@ router.post('/orders/:id/addItem', async (req, res) => {
       return res.json({ success: false, message: e.message });
     };
 
-    // if(order.status == 'COMPLETE' || order.status == 'HIDDEN'){
-    //   addOrder(req, res);
-    //   return;
-    // }
-
     _.each(items, (item) => {
       itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
       let orderItem = new OrderItemSchema({
@@ -298,7 +293,7 @@ router.post('/orders/:id/addItem', async (req, res) => {
       });
       let { error } = validateOrderItemObject(orderItem);
       if (!!error){
-        order.totalItems += orderItem.qty;
+        order.totalItems += 1;
         order.totalPrice += orderItem.price;
         order.status = 'RE-ORDER';
         order.items.push(orderItem);
@@ -352,7 +347,8 @@ router.put('/orders/:orderId/all/:status', (req, res) => {
     .then(async (order) => {
       let customer = await Customer.findById(order.customerId);
       order.items.forEach((item) => { 
-         if(req.params.status == 'ACCEPTED' || req.params.status == 'REJECTED') item.status = req.params.status; 
+         if(req.params.status == 'ACCEPTED' || req.params.status == 'REJECTED') item.status = req.params.status;
+         if(req.params.status == 'ACCEPTED') order.totalBill += item.price;
         });
       // Move the order to bills if all have been accepted
       if(req.params.status == 'ACCEPTED') order.status = 'BILLS';
@@ -383,7 +379,12 @@ router.put('/orders/:orderId/:itemId/:status', (req, res) => {
       let customer = await Customer.findById(order.customerId);
       if(order.status == 'NEW') order.status = 'BILLS';
       let { message, update } = getNotificationMessage(order.status);
-      order.items.filter((item) => { if(item._id == req.params.itemId) item.status = req.params.status; });
+      order.items.filter((item) => { 
+        if(item._id == req.params.itemId){
+          item.status = req.params.status;
+          if(req.params.status == 'ACCEPTED') order.totalBill += item.price;
+        }
+      });
       getAccessToken().then(accessToken => {
         sendNotification(accessToken, customer.FCMToken, update, message, order);
         }).catch(error => {
