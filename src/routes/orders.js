@@ -1,4 +1,10 @@
 const router = require('express').Router();
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const _ = require('lodash');
+const axios = require('axios');
+const {google} = require('googleapis');
+
 const { Order,
     OrderPaymentsSchema,
     OrderItemSchema,
@@ -6,13 +12,7 @@ const { Order,
     validateOrderItemObject } = require('../models/Order');
 const Hotel = require('../models/Hotel');
 const Customer = require('../models/Customer');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const _ = require('lodash');
-const axios = require('axios');
-const https = require('https');
-const fs = require('fs');
-const {google} = require('googleapis');
+const Fee = require('../models/Fee');
 
 var MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 var SCOPES = [MESSAGING_SCOPE];
@@ -108,8 +108,6 @@ function sendNotification(authToken, deviceToken, title, body, order) {
     console.log(error.message);
   });
 }
-
-function addOrder(){}
 
 // Orders list for a hotel
 router.get('/hotel/orders', (req, res) => {
@@ -274,7 +272,6 @@ router.post('/orders/:id/addItem', async (req, res) => {
   if (Object.keys(req.body).length === 0) {
     res.json({ success: false, message: 'A request body is required' });
   } else {
-  
     const items = [req.body];
     let itemsMessage = '';
     let order = {};
@@ -284,43 +281,90 @@ router.post('/orders/:id/addItem', async (req, res) => {
       return res.json({ success: false, message: e.message });
     };
 
-    _.each(items, (item) => {
-      itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
-      let orderItem = new OrderItemSchema({
-        name: item.name,
-        qty: item.qty,
-        price: item.price
-      });
-      let { error } = validateOrderItemObject(orderItem);
-      if (!!error){
-        order.totalItems += 1;
-        order.totalPrice += orderItem.price;
-        order.status = 'RE-ORDER';
-        order.items.push(orderItem);
-      } else {
-        res.json({ success: false, message: error.message });
-      }
-    });
+    // TODO :: PLEASE FIND A WAY TO OPTIMIZE THIS CODE BELOW, TOO MUCH COMPLEXITY AT THE MOMENT, WILL HAVE TO ADD A CONTROLLER WHICH CAN HANDLE SIMPLY ADDING NEW ORDERS ~ By Joe
+    // If order is complete insert a new order
+    if(order.status == 'COMPLETE'){
+      let order = new Order();
+      order.hotelId = req.body.hotelId;
+      order.customerId = req.body.customerId;
+      order.status = "NEW";
+      order.items = [];
+      let itemsMessage = '';
 
-    let { message, update } = getNotificationMessage(order.status);
-    order.save().then((order) => {
-      Hotel.findById(order.hotelId).then(hotel => {
-        getAccessToken().then(accessToken => {
-          sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
+      _.each(items, (item) => {
+        itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
+        let orderItem = new OrderItemSchema({
+          name: item.name,
+          qty: item.qty,
+          price: item.price
+        });
+        order.totalItems = item.qty;
+        order.totalPrice = item.price;
+        let { error } = validateOrderItemObject(orderItem);
+        if (!!error){
+          order.items.push(orderItem);
+        } else {
+          return res.json({ success: false, message: error.message });
+        }
+      });
+
+      let {message, update } = getNotificationMessage(order.status);
+      order.save().then((o) => {
+        Hotel.findById(req.body.hotelId).then(hotel => {
+          order = o;
+          order.hotel = hotel;
+          getAccessToken().then(accessToken => {
+            sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
+          }).catch(error => {
+            console.log(error.message);
+          });
+        }).catch(error => {
+          console.log(error.message);
+          return res.json({ success: false, message: error.message });
+        });
+        return res.json({ success: true, order });
+      }).catch((e) => {
+        return res.json({ success: false, message: e.message });
+      });
+    } else {
+      // Update the current order
+      _.each(items, (item) => {
+        itemsMessage += `${item.qty} ${item.name} @ ${item.price} \n`;
+        let orderItem = new OrderItemSchema({
+          name: item.name,
+          qty: item.qty,
+          price: item.price
+        });
+        let { error } = validateOrderItemObject(orderItem);
+        if (!!error){
+          order.totalItems += 1;
+          order.totalPrice += orderItem.price;
+          order.status = 'RE-ORDER';
+          order.items.push(orderItem);
+        } else {
+          res.json({ success: false, message: error.message });
+        }
+      });
+  
+      let { message, update } = getNotificationMessage(order.status);
+      order.save().then((order) => {
+        Hotel.findById(order.hotelId).then(hotel => {
+          getAccessToken().then(accessToken => {
+            sendNotification(accessToken, hotel.FCMToken, message, itemsMessage, order);
+          }).catch(error => {
+            console.log(error.message);
+          });
         }).catch(error => {
           console.log(error.message);
         });
-      }).catch(error => {
-        console.log(error.message);
+        res.json({ success: true, order });
+      }).catch((e) => {
+        res.json({ success: false, message: e.message });
       });
-      res.json({ success: true, order });
-    }).catch((e) => {
-      res.json({ success: false, message: e.message });
-    });
+    }
   }
 });
 
-// Mark order as complete
 router.put('/orders/:id/:status', (req, res) => {
   Order
     .findByIdAndUpdate(req.params.id, { status: req.params.status }, { new: true })
@@ -333,6 +377,27 @@ router.put('/orders/:id/:status', (req, res) => {
       }).catch(error => {
         console.log(error.message);
       });
+
+      // If order is complete, insert a Nadab fee
+      if(order.status == 'COMPLETE') {
+        // Check if there's an entry for hotel and day
+        const date = new Date();
+        const day = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`;
+        let fee = await Fee.findOne({ hotel: order.hotelId, day: day });
+        if(Object.keys(fee).length > 0) {
+          // Update the fee
+          fee.total += order.totalBill;
+          fee.ordersId.push(order._id);
+        } else {
+          // Create a new record
+          fee = new Fee();
+          fee.total = order.totalBill;
+          fee.ordersId = [order._id];
+          fee.day = day;
+          fee.hotel = order.hotelId;
+        }
+        await fee.save();
+      }
       res.json({ success: true, order });
   }).catch((e) => {
     console.log(e)
