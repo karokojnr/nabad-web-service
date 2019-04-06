@@ -384,7 +384,7 @@ router.put('/orders/:id/:status', (req, res) => {
         const date = new Date();
         const day = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`;
         let fee = await Fee.findOne({ hotel: order.hotelId, day: day });
-        if(Object.keys(fee).length > 0) {
+        if(fee) {
           // Update the fee
           fee.total += order.totalBill;
           fee.ordersId.push(order._id);
@@ -442,7 +442,7 @@ router.put('/orders/:orderId/:itemId/:status', (req, res) => {
     .populate('customerId', 'fullName')
     .then(async (order) => {
       let customer = await Customer.findById(order.customerId);
-      if(order.status == 'NEW') order.status = 'BILLS';
+      if(order.status == 'NEW' || req.params.status == 'ACCEPTED') order.status = 'BILLS';
       let { message, update } = getNotificationMessage(order.status);
       order.items.filter((item) => { 
         if(item._id == req.params.itemId){
