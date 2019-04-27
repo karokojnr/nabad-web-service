@@ -386,12 +386,12 @@ router.put('/orders/:id/:status', (req, res) => {
         let fee = await Fee.findOne({ hotel: order.hotelId, day: day });
         if(fee) {
           // Update the fee
-          fee.total += order.totalBill;
+          fee.total += (order.totalBill * 0.0099).toFixed(2);
           fee.ordersId.push(order._id);
         } else {
           // Create a new record
           fee = new Fee();
-          fee.total = order.totalBill;
+          fee.total = (order.totalBill * 0.0099).toFixed(2);
           fee.ordersId = [order._id];
           fee.day = day;
           fee.hotel = order.hotelId;
