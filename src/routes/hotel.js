@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.get('/hotels', (req, res) => {
-  Hotel.find({}).then((h) => {
+  Hotel.find({ paymentStatus: 'PAID'}).then((h) => {
     res.json({ success: true, hotels: h });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
