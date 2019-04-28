@@ -6,6 +6,10 @@ const FeeSchema = new Schema({
         type: Number,
         required: true
     },
+    numberOfOrders: {
+        type: Number,
+        default: 0
+    },
     ordersId: {
         type: Array
     },

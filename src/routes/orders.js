@@ -382,16 +382,18 @@ router.put('/orders/:id/:status', (req, res) => {
       if(order.status == 'COMPLETE') {
         // Check if there's an entry for hotel and day
         const date = new Date();
-        const day = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`;
+        const day = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
         let fee = await Fee.findOne({ hotel: order.hotelId, day: day });
         if(fee) {
           // Update the fee
           fee.total += (order.totalBill * 0.0099).toFixed(2);
           fee.ordersId.push(order._id);
+          fee.numberOfOrders += 1;
         } else {
           // Create a new record
           fee = new Fee();
           fee.total = (order.totalBill * 0.0099).toFixed(2);
+          fee.numberOfOrders = 1;
           fee.ordersId = [order._id];
           fee.day = day;
           fee.hotel = order.hotelId;
