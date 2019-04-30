@@ -42,7 +42,7 @@ const HotelSchema = new Schema({
   },
   paymentStatus: {
     type: String,
-    default: 'UNPAID'
+    default: 'NEW'
   },
   FCMToken: {
     type: String,
