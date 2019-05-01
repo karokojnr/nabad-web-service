@@ -2,6 +2,7 @@ const router = require('express').Router();
 const Hotel = require('../models/Hotel');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Fees = require('../models/Fee');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -152,6 +153,36 @@ router.put('/hotels/edit/:id', (req, res) => {
     }).catch((e) => {
       res.status(400).json({ success: false, message: e.message });
     })
+  }).catch((e) => {
+    res.status(404).json({ success: false, message: e.message });
+  });
+});
+
+
+router.get('/hotel/fees', (req, res) => {
+  // Pull hotel token and use it to filter hotels
+  let hotel = {}
+
+  if (req.headers['x-token'] || req.query['token']) {
+    let token = "";
+    if (req.headers['x-token'] !== undefined) token = req.headers['x-token'];
+    if (req.query['token'] !== undefined) token = req.query['token'];
+    jwt.verify(token, process.env.SESSIONKEY, function(error, decode) {
+      if (error) {
+        throw new Error(error.message);
+      } else {
+        hotel = decode;
+      }
+    });
+  }
+
+  let params = hotel.id ? { hotel: mongoose.Types.ObjectId(hotel.id) } : {};
+  Fees
+    .find(params)
+    // .populate('hotel', 'businessName')
+    .sort({ createdAt: 'desc' })
+    .then((fees) => {
+    res.json({ success: true, fees });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
   });
