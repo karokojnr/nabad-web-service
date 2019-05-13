@@ -198,14 +198,14 @@ router.get('/customer/orders', (req, res) => {
   let params = customer.id ? { customerId: mongoose.Types.ObjectId(customer.id) } : {};
   Order
     .find(params)
+    .sort({'createdAt': 'asc'})
     .populate('hotelId', 'businessName')
     .then((orders) => {
-      // orders.forEach(order => {
-      //   order.hotel = order.hotelId;
-      //   order.hotelid = order.hotelId._id;
-      // });
-      console.log(orders);
-      console.log(orders.length)
+      orders.forEach(order => {
+        order.hotel = order.hotelId;
+
+        order.hotelId = order.hotelId._id;
+      });
       res.json({ success: true, orders });
     }).catch((e) => {
     res.json({ success: false, message: e.message });

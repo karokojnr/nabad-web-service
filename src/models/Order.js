@@ -57,7 +57,8 @@ const OrderSchema = new Schema({
     default: 'NEW'
   },
   hotel: {
-    type: Object
+    type: Object,
+    default: {}
   },
   hotelId: {
     type: Types.ObjectId,

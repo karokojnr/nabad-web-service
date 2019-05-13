@@ -25,6 +25,7 @@ const upload = multer({ storage: storage });
 
 router.get('/hotels', (req, res) => {
   Hotel.find().then((h) => {
+    h.forEach(hotel => console.log(hotel._id))
     res.json({ success: true, hotels: h });
   }).catch((e) => {
     res.status(404).json({ success: false, message: e.message });
