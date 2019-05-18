@@ -244,7 +244,7 @@ router.put('/hotels/edit/:id', (req, res) => {
     });
 });
 
-router.put('/hotels/edit/:id/image', upload('image'), (req, res) => {
+router.put('/hotels/edit/:id/image', upload.single('image'), (req, res) => {
   if (Object.keys(req.body).length === 0) {
     return res.json({
       success: false,
