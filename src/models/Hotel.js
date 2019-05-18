@@ -46,7 +46,7 @@ const HotelSchema = new Schema({
   },
   FCMToken: {
     type: String,
-    default: ""
+    default: ''
   }
 }, { timestamps: true });
 
