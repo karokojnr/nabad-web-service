@@ -36,7 +36,7 @@ module.exports = () => {
       maxAge: 3600000
     }
   }));
-  app.use(express.static(config.root + '/public'));
+  app.use(express.static(config.root + 'public'));
 
   // Import all controllers and call app on them
   let controllers = glob.sync(config.root + '/src/routes/*.js');

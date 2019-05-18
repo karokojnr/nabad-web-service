@@ -43,7 +43,6 @@ function getAccessToken() {
 }
 
 function getNotificationMessage(orderStatus) {
-  console.log(orderStatus);
   let message = 'Your order was updated';
   let update = 'update';
 
