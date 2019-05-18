@@ -9,6 +9,7 @@ const im = require('imagemagick');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 let token = {};
 const storage = multer.diskStorage({
@@ -336,14 +337,13 @@ router.put('/customers/edit/:id', (req, res) => {
   Customer.findById(mongoose.Types.ObjectId(req.params.id))
     .then((customer) => {
       if (req.body.fullName) customer.fullName = req.body.fullName;
-      if (req.body.username) customer.username = parseInt(req.body.username);
       if (req.body.mobileNumber) customer.mobileNumber = req.body.mobileNumber;
       if (req.body.email) customer.email = req.body.email;
       customer.save()
-        .then(customer => {
+        .then(user => {
           res.json({
             success: true,
-            customer
+            customer: user
           });
         })
         .catch((e) => {
