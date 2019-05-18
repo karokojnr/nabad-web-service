@@ -363,6 +363,54 @@ router.put('/customers/edit/:id', (req, res) => {
     });
 });
 
+router.put('/customers/edit/:id/image', upload.single('image'), (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    return res.status(404)
+      .json({
+        success: false,
+        message: 'A request body is required'
+      });
+  }
+  // TODO:: Delete existing profile
+  Customer.findById(mongoose.Types.ObjectId(req.params.id))
+    .then((customer) => {
+      if (req.body.fullName) customer.fullName = req.body.fullName;
+      if (req.body.mobileNumber) customer.mobileNumber = req.body.mobileNumber;
+      if (req.body.email) customer.email = req.body.email;
+      customer.save()
+        .then(user => {
+          im.resize({
+            srcPath: `public/images/uploads/customers/${req.file.filename}`,
+            dstPath: `public/images/uploads/customers/thumb_${req.file.filename}`,
+            width: 300,
+            height: 300
+          }, function (error, stdin, stdout) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('Image resized successfully');
+            }
+          });
+          res.json({
+            success: true,
+            customer: user
+          });
+        })
+        .catch((e) => {
+          res.json({
+              success: false,
+              message: e.message
+            });
+        });
+    })
+    .catch((e) => {
+      res.json({
+          success: false,
+          message: e.message
+        });
+    });
+});
+
 module.exports = (app) => {
   app.use('/', router);
 };
