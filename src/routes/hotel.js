@@ -213,8 +213,8 @@ router.put('/hotels/edit/:id', (req, res) => {
   }
   Hotel.findById(mongoose.Types.ObjectId(req.params.id))
     .then((hotel) => {
-      if (req.body.fullName) hotel.applicantName = req.body.applicantName;
-      if (req.body.businessEmail) hotel.businessEmail = parseInt(req.body.businessEmail);
+      if (req.body.applicantName) hotel.applicantName = req.body.applicantName;
+      if (req.body.businessEmail) hotel.businessEmail = req.body.businessEmail;
       if (req.body.mobileNumber) hotel.mobileNumber = req.body.mobileNumber;
       if (req.body.businessName) hotel.businessName = req.body.businessName;
       if (req.body.city) hotel.city = req.body.city;
@@ -253,13 +253,14 @@ router.put('/hotels/edit/:id/image', upload.single('image'), (req, res) => {
   }
   Hotel.findById(mongoose.Types.ObjectId(req.params.id))
     .then((hotel) => {
-      if (req.body.fullName) hotel.applicantName = req.body.applicantName;
+      if (req.body.applicantName) hotel.applicantName = req.body.applicantName;
       if (req.body.businessEmail) hotel.businessEmail = parseInt(req.body.businessEmail);
       if (req.body.mobileNumber) hotel.mobileNumber = req.body.mobileNumber;
       if (req.body.businessName) hotel.businessName = req.body.businessName;
       if (req.body.city) hotel.city = req.body.city;
       if (req.body.address) hotel.address = req.body.address;
       if (req.body.payBillNo) hotel.payBillNo = req.body.payBillNo;
+      hotel.image = req.file.filename;
       hotel.save()
         .then(hotel => {
           im.resize({

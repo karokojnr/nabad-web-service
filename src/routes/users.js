@@ -377,6 +377,7 @@ router.put('/customers/edit/:id/image', upload.single('image'), (req, res) => {
       if (req.body.fullName) customer.fullName = req.body.fullName;
       if (req.body.mobileNumber) customer.mobileNumber = req.body.mobileNumber;
       if (req.body.email) customer.email = req.body.email;
+      customer.profile = req.file.filename;
       customer.save()
         .then(user => {
           im.resize({
