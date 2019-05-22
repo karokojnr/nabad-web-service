@@ -231,7 +231,6 @@ router.get('/customer/orders', (req, res) => {
     .then((orders) => {
       orders.forEach(order => {
         order.hotel = order.hotelId;
-
         order.hotelId = order.hotelId._id;
       });
       res.json({
@@ -240,6 +239,7 @@ router.get('/customer/orders', (req, res) => {
       });
     })
     .catch((e) => {
+      console.log(e);
       res.json({
         success: false,
         message: e.message
