@@ -27,7 +27,6 @@ const upload = multer({ storage: storage });
 router.get('/hotels', (req, res) => {
   Hotel.find()
     .then((h) => {
-      h = h.filter(hotel => hotel.paymentStatus==='PAID');
       res.json({
         success: true,
         hotels: h
