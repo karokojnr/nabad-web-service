@@ -30,15 +30,18 @@ const CustomerSchema = new Schema({
   },
   profile: {
     type: String,
-    default: "avater.png"
+    default: 'avater.png'
   },
   FCMToken: {
     type: String,
-    default: ""
+    default: ''
   }
 }, { timestamps: true });
 
-const emailSchema = Joi.string().email().lowercase().required();
+const emailSchema = Joi.string()
+  .email()
+  .lowercase()
+  .required();
 
 CustomerSchema.methods.validateEmail = (email) => Joi.validate(email, emailSchema);
 

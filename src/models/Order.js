@@ -27,9 +27,16 @@ const OrderItemsSchema = new Schema({
 });
 
 const OrderItemJoiSchema = Joi.object({
-  name: Joi.string().required(),
-  qty: Joi.number().integer().positive().greater(0).required(),
-  price: Joi.number().greater(0).required()
+  name: Joi.string()
+    .required(),
+  qty: Joi.number()
+    .integer()
+    .positive()
+    .greater(0)
+    .required(),
+  price: Joi.number()
+    .greater(0)
+    .required()
 });
 
 const OrderPaymentsSchema = new Schema({
@@ -47,8 +54,11 @@ const OrderPaymentsSchema = new Schema({
 });
 
 const OrderPaymentsJoiSchema = Joi.object({
-  method: Joi.string().required(),
-  amount: Joi.number().positive().required()
+  method: Joi.string()
+    .required(),
+  amount: Joi.number()
+    .positive()
+    .required()
 });
 
 const OrderSchema = new Schema({

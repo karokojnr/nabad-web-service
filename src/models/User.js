@@ -31,7 +31,7 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    default: "WAITER"
+    default: 'WAITER'
   },
   permissions: {
     type: Array,
@@ -39,7 +39,10 @@ const UserSchema = new Schema({
   }
 }, { timestamps: true });
 
-const emailSchema = Joi.string().email().lowercase().required();
+const emailSchema = Joi.string()
+  .email()
+  .lowercase()
+  .required();
 
 UserSchema.methods.validateEmail = (email) => Joi.validate(email, emailSchema);
 

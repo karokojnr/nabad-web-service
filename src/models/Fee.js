@@ -2,30 +2,30 @@ const mongoose = require('mongoose');
 const { Schema, Types } = mongoose;
 
 const FeeSchema = new Schema({
-    total: {
-        type: Number,
-        required: true
-    },
-    numberOfOrders: {
-        type: Number,
-        default: 0
-    },
-    ordersId: {
-        type: Array
-    },
-    day: {
-        type: String,
-        required: true
-    },
-    hotel: {
-        type: Types.ObjectId,
-        refs: 'Hotel',
-        required: true
-    },
-    status: {
-        type: String,
-        default: 'UNPAID'
-    }
+  total: {
+    type: Number,
+    required: true
+  },
+  numberOfOrders: {
+    type: Number,
+    default: 0
+  },
+  ordersId: {
+    type: Array
+  },
+  day: {
+    type: String,
+    required: true
+  },
+  hotel: {
+    type: Types.ObjectId,
+    refs: 'Hotel',
+    required: true
+  },
+  status: {
+    type: String,
+    default: 'UNPAID'
+  }
 }, { timestamps: true });
 
 
